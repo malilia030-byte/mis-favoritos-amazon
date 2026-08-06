@@ -213,7 +213,7 @@ function renderProds(){
     const priceHtml=dcto?`$${ahora} <s style='opacity:.55'>$${antes}</s> <span class='tipo'>-${dcto}%</span>`:`$${ahora}`;
     return `<div class="row" data-id="${p.producto_id}"><div class="info"><div class="t">${esc(p.nombre)}</div><div class="m">${esc(sb?sb.subcat_nombre:p.subcat_slug)} · ${priceHtml} · <span class="topo">${esc(tipo)}</span></div></div><div class="ops"><button class="op" data-a="edit">✏️</button><button class="op del" data-a="del">🗑️</button></div></div>`;
   }).join(''):'<div class="empty">Sin productos</div>';
-  bindListOps('#listProductos',editarProd,borrarProd);
+  bindListOps('#listProductos',editarProd,borrarProducto);
 }
 function renderCats(){
   const l=$('#listCategorias');if(!l)return;
