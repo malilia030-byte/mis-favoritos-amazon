@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Panel · Mis Favoritos de Amazon</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF6EF;--card:#fff;--pink:#F18DA0;--pink2:#E86A83;--magenta:#D64A6E;--purple:#9B7BD4;--brown:#5C4632;--grey:#8a7a6a;--border:#F3DFE0;--serif:'Playfair Display',serif;--sans:'Poppins',sans-serif;--shadow:0 6px 22px rgba(180,140,150,.16)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--brown);line-height:1.5}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none}
+.container{width:min(980px,94%);margin:0 auto}
+.top{background:#2e2118;color:#fff;padding:.8rem 0;text-align:center}
+.top h1{font-family:var(--serif);font-size:1.2rem}
+.top p{font-size:.75rem;color:#cbb}
+.grid{display:grid;grid-template-columns:1fr;gap:1rem;padding:1.4rem 0}
+@media(min-width:860px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}}
+.tabbar{display:flex;gap:.5rem;flex-wrap:wrap;padding:1rem 0 0}
+.tab{background:#fff;border:1px solid var(--border);border-radius:999px;padding:.5rem 1.1rem;font-size:.82rem;font-weight:600;transition:.2s}
+.tab.active{background:linear-gradient(90deg,var(--pink2),var(--magenta));color:#fff;border-color:transparent}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);border:1px solid var(--border);padding:1.2rem}
+.card h2{font-family:var(--serif);font-size:1.05rem;margin-bottom:.9rem}
+.field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem}
+.field label{font-size:.75rem;font-weight:600;color:#6b5a4b}
+.field input,.field select{width:100%;padding:.6rem .8rem;background:#faf3ec;border:1px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;outline:none;color:var(--brown)}
+.field input:focus,.field select:focus{border-color:var(--pink);background:#fff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.btn{background:linear-gradient(90deg,var(--pink2),var(--magenta));color:#fff;border-radius:999px;padding:.65rem 1.2rem;font-weight:600;font-size:.85rem}
+.btn.grey{background:#fff;color:var(--brown);border:1px solid var(--border)}
+.btn.purple{background:var(--purple);background:linear-gradient(90deg,#9B7BD4,#7a5fd0)}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem}
+.list{display:flex;flex-direction:column;gap:.5rem;max-height:500px;overflow-y:auto}
+.row{display:flex;justify-content:space-between;align-items:center;gap:.5rem;background:#faf3ec;border:1px solid var(--border);border-radius:12px;padding:.6rem .7rem}
+.row .info{min-width:0}
+.row .t{font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .m{font-size:.72rem;color:#9a8a7a}
+.row .ops{display:flex;gap:.3rem}
+.op{width:32px;height:32px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.op.del{color:#c33}
+.tipo{display:inline-block;background:#ffe9ec;color:var(--magenta);border-radius:999px;padding:.05rem .5rem;font-size:.65rem;font-weight:600}
+.empty{color:#b292a6;font-size:.85rem;text-align:center;padding:1rem}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:.7rem 0}
+.topbar a{background:#fff;border:1px solid var(--border);border-radius:999px;padding:.4rem .9rem;font-size:.8rem;font-weight:600}
+.toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#2e2118;color:#fff;padding:.6rem 1.2rem;border-radius:999px;font-size:.85rem;z-index:99;opacity:0;transition:.3s;pointer-events:none}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="sbError" style="display:none;background:#fff0f0;color:#c0392b;padding:.6rem 1rem;font-size:.8rem;text-align:center"></div>
+
+<div class="top">
+  <h1>🛠️ Panel de Captura</h1>
+  <p>Administra tu catálogo · Los cambios se guardan en este navegador</p>
+</div>
+
+<div class="container">
+  <div class="topbar">
+    <div class="tabs">
+      <button class="tab active" data-tab="productos">📦 Productos</button>
+      <button class="tab" data-tab="categorias">🗂️ Categorías</button>
+      <button class="tab" data-tab="subcategorias">📁 Subcategorías</button>
+    </div>
+    <a href="index.html">← Volver a la tienda</a>
+  </div>
+
+  <div class="backupbar" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem">
+    <button class="btn purple" id="btnExport">📦 Exportar</button>
+    <button class="btn grey" id="btnImport">📥 Importar</button>
+    <input type="file" id="fileImport" accept=".json" class="hidden">
+    <button class="btn grey" id="btnReset">♻️ Restablecer</button>
+  </div>
+
+  <!-- PRODUCTOS -->
+  <div class="grid panel" id="panel-productos">
+    <div class="card">
+      <h2 id="formTitleProducto">Captura un producto</h2>
+      <form id="formProducto">
+        <div class="field"><label>Nombre *</label><input id="pNombre" required placeholder="Ej: Cámara HD 1080p"></div>
+        <div class="row2">
+          <div class="field"><label>Precio de oferta ($) *</label><input type="number" id="pPrecio" min="0" step="0.01" placeholder="29.99"></div>
+          <div class="field"><label>Precio antes ($)</label><input type="number" id="pPrecioAntes" min="0" step="0.01" placeholder="49.99 (opcional, para el %)"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Tipo carrusel</label><select id="pTipo">
+            <option value="">(Ninguno)</option>
+            <option value="mas_vendidos">Más Vendidos</option>
+            <option value="mas_populares">Más Populares</option>
+            <option value="gadgets_top">Gadgets Top</option>
+            <option value="nuevos">Nuevos</option>
+            <option value="ofertas">Ofertas</option>
+            <option value="destacados">Destacados</option>
+          </select></div>
+        </div>
+        <div class="field"><label>Subcategoría *</label><select id="pSubcat" required></select></div>
+        <div class="field"><label>URL imagen</label><input id="pImagen" placeholder="https://… o imagenes/…"></div>
+        <div class="field"><label>Link Amazon</label><input id="pLink" placeholder="https://amazon.es/dp/…"></div>
+        <div class="actions"><button class="btn" id="btnProdSubmit">Agregar Producto</button><button type="button" class="btn grey hidden" id="btnProdCancel">Cancelar</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Productos registrados</h2>
+      <div class="list" id="listProductos"></div>
+    </div>
+  </div>
+
+  <!-- CATEGORIAS -->
+  <div class="grid panel hidden" id="panel-categorias">
+    <div class="card">
+      <h2 id="formTitleCat">Captura una categoría</h2>
+      <form id="formCat">
+        <div class="field"><label>Nombre *</label><input id="cNombre" placeholder="Ej: Cámaras" required></div>
+        <div class="field"><label>Slug</label><input id="cSlug" placeholder="Vacío = se genera solo"></div>
+        <div class="field"><label>URL imagen</label><input id="cImagen" placeholder="imagenes/categorias/camaras.jpg"></div>
+        <div class="actions"><button class="btn" id="btnCatSub">Agregar Categoría</button><button type="button" class="btn grey hidden" id="btnCatCancel">Cancelar</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Categorías registradas</h2>
+      <div class="list" id="listCategorias"></div>
+    </div>
+  </div>
+
+  <!-- SUBCATEGORIAS -->
+  <div class="grid panel hidden" id="panel-subcategorias">
+    <div class="card">
+      <h2 id="formTitleSub">Captura una subcategoría</h2>
+      <form id="formSub">
+        <div class="field"><label>Categoría padre *</label><select id="sCat" required></select></div>
+        <div class="field"><label>Nombre *</label><input id="sNombre" placeholder="Ej: Cámaras HD" required></div>
+        <div class="field"><label>Slug</label><input id="sSlug" placeholder="Vacío = se genera solo"></div>
+        <div class="actions"><button class="btn" id="btnSubSub">Agregar Subcategoría</button><button type="button" class="btn grey hidden" id="btnSubCancel">Cancelar</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Subcategorías registradas</h2>
+      <div class="list" id="listSubs"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+/* DB (Supabase / Nube) - via REST fetch (sin libreria externa) */
+const SUPABASE_URL = 'https://vmchbmrcpcpkycnadrzo.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtY2hibXJjcGNwa3ljbmFkcnpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Njk3NDksImV4cCI6MjEwMTU0NTc0OX0.txUm9JTN8Ny1lCiFcOx80z_SrpMteWkLQSMoGlWKfH0';
+const TIPOS=['mas_vendidos','mas_populares','gadgets_top','nuevos','ofertas','destacados'];
+let cats=[],subs=[],prods=[];
+function showErr(m){var e=document.getElementById('sbError');if(e){e.textContent=m;e.style.display='block';}}
+function api(table,query,method,body){
+  const url=SUPABASE_URL+'/rest/v1/'+table+(query||'');
+  return fetch(url,{
+    method:method||'GET',
+    headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,'Content-Type':'application/json',...(body?{'Prefer':'return=representation'}:{})},
+    body:body?JSON.stringify(body):undefined
+  }).then(async r=>{const j=await r.json().catch(()=>null);if(!r.ok){throw new Error((j&&j.message)||('HTTP '+r.status));}return j;})
+   .catch(e=>{if(e instanceof TypeError){throw new Error('No hay conexion con Supabase');}throw e;});
+}
+function normRow(k,o){
+  if(k==='categorias')return {categoria_id:+o.categoria_id,categoria_nombre:o.categoria_nombre,categoria_slug:o.categoria_slug,imagen_url:o.imagen_url||'',desc:o.descripcion||o.desc||o.description||''};
+  if(k==='subcategorias')return {subcat_id:+o.subcat_id,categoria_slug:o.categoria_slug,subcat_nombre:o.subcat_nombre,subcat_slug:o.subcat_slug,imagen_url:o.imagen_url||''};
+  return {producto_id:+o.producto_id,subcat_slug:o.subcat_slug,nombre:o.nombre,precio:Number(o.precio)||0,precio_antes:Number(o.precio_antes)||0,imagen_url:o.imagen_url||'',link_amazon:o.link_amazon||'',carrusel_tipo:o.carrusel_tipo||''};
+}
+async function cargar(){
+  try{
+    const [c,s,p]=await Promise.all([
+      api('categorias','?select=*&order=categoria_id.asc'),
+      api('subcategorias','?select=*&order=subcat_id.asc'),
+      api('productos','?select=*&order=producto_id.asc')
+    ]);
+    cats=(c||[]).map(r=>normRow('categorias',r));
+    subs=(s||[]).map(r=>normRow('subcategorias',r));
+    prods=(p||[]).map(r=>normRow('productos',r));
+    fillSubcats();fillCatParent();render();
+  }catch(e){showErr('Error al leer Supabase: '+e.message);}
+}
+cargar();
+const slug=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const nid=(list,f)=>list.reduce((m,i)=>Math.max(m,Number(i[f])||0),0)+1;
+const $=(s,c=document)=>c.querySelector(s);const $$=(s,c=document)=>[...c.querySelectorAll(s)];
+const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2600)};
+
+/* tabs */
+let tab='productos';
+function switchTab(t){tab=t;$$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));$$('.panel').forEach(p=>p.classList.toggle('hidden',p.id!=='panel-'+t));render()}
+$$('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+
+/* fills */
+function fillSubcats(){
+  const s=$('#pSubcat');
+  s.innerHTML='<option value="">Selecciona</option>'+subs.map(sb=>`<option value="${esc(sb.subcat_slug)}">${esc((cats.find(c=>c.categoria_slug===sb.categoria_slug)?.categoria_nombre||sb.categoria_slug)+' → '+sb.subcat_nombre)}</option>`).join('');
+}
+function fillCatParent(){
+  const s=$('#sCat');
+  s.innerHTML='<option value="">Selecciona</option>'+cats.map(c=>`<option value="${esc(c.categoria_slug)}">${esc(c.categoria_nombre)}</option>`).join('');
+}
+
+/* render lists */
+function render(){
+  renderProds();renderCats();renderSubs();
+}
+function renderProds(){
+  const l=$('#listProductos');if(!l)return;
+  l.innerHTML=prods.length?prods.slice().sort((a,b)=>a.producto_id-b.producto_id).map(p=>{
+    const sb=subs.find(s=>s.subcat_slug===p.subcat_slug);const tipo=p.carrusel_tipo||'—';
+    const antes=Number(p.precio_antes)||0, ahora=Number(p.precio)||0;
+    const dcto=antes>ahora?Math.round((1-ahora/antes)*100):0;
+    const priceHtml=dcto?`$${ahora} <s style='opacity:.55'>$${antes}</s> <span class='tipo'>-${dcto}%</span>`:`$${ahora}`;
+    return `<div class="row" data-id="${p.producto_id}"><div class="info"><div class="t">${esc(p.nombre)}</div><div class="m">${esc(sb?sb.subcat_nombre:p.subcat_slug)} · ${priceHtml} · <span class="topo">${esc(tipo)}</span></div></div><div class="ops"><button class="op" data-a="edit">✏️</button><button class="op del" data-a="del">🗑️</button></div></div>`;
+  }).join(''):'<div class="empty">Sin productos</div>';
+  bindListOps('#listProductos',editarProd,borrarProducto);
+}
+function renderCats(){
+  const l=$('#listCategorias');if(!l)return;
+  l.innerHTML=cats.length?cats.slice().sort((a,b)=>a.categoria_id-b.categoria_id).map(c=>
+    `<div class="row" data-id="${c.categoria_id}"><div class="info"><div class="t">${esc(c.categoria_nombre)}</div><div class="m">${esc(c.categoria_slug)} · ${subs.filter(s=>s.categoria_slug===c.categoria_slug).length} subcats</div></div><div class="ops"><button class="op" data-a="edit">✏️</button><button class="op del" data-a="del">🗑️</button></div></div>`).join(''):'<div class="empty">Sin categorías</div>';
+  bindListOps($('#listCategorias'),editarCat,borrarCat);
+}
+function renderSubs(){
+  const l=$('#listSubs');if(!l)return;
+  l.innerHTML=subs.length?subs.slice().sort((a,b)=>a.subcat_id-b.subcat_id).map(s=>
+    `<div class="row" data-id="${s.subcat_id}"><div class="info"><div class="t">${esc(s.subcat_nombre)}</div><div class="m">${esc(s.subcat_slug)} · ${esc(cats.find(c=>c.categoria_slug===s.categoria_slug)?.categoria_nombre||s.categoria_slug)}</div></div><div class="ops"><button class="op" data-a="edit">✏️</button><button class="op del" data-a="del">🗑️</button></div></div>`).join(''):'<div class="empty">Sin subcategorías</div>';
+  bindListOps(l,editarSub,borrarSub);
+}
+function bindListOps(sel,edit,del){const cont=typeof sel==='string'?$(sel):sel;if(!cont)return;$$('.row',cont).forEach(r=>{r.querySelector('[data-a=edit]').addEventListener('click',()=>edit(+r.dataset.id));r.querySelector('[data-a=del]').addEventListener('click',()=>del(+r.dataset.id))})}
+
+/* productos */
+function guardarProducto(e){e.preventDefault();
+  const d={subcat_slug:$('#pSubcat').value,nombre:$('#pNombre').value,precio:Number($('#pPrecio').value)||0,precio_antes:Number($('#pPrecioAntes').value)||0,imagen_url:$('#pImagen').value,link_amazon:$('#pLink').value,carrusel_tipo:$('#pTipo').value};
+  guardar('productos',d,editId,'producto_id').then(ok=>{if(ok){resetForm();toast('Producto guardado ✅');render();}});
+}
+$('#formProducto').addEventListener('submit',guardarProducto);
+let editId=null;
+function editarProd(id){const p=prods.find(x=>x.producto_id===id);if(!p)return;editId=id;
+  $('#pNombre').value=p.nombre;$('#pPrecio').value=p.precio;$('#pPrecioAntes').value=p.precio_antes||'';$('#pImagen').value=p.imagen_url;$('#pLink').value=p.link_amazon;$('#pSubcat').value=p.subcat_slug;$('#pTipo').value=p.carrusel_tipo;
+  $('#btnProdSubmit').textContent='Guardar';$('#btnProdCancel').classList.remove('hidden');}
+function borrarProducto(id){if(!confirm('¿Borrar producto?'))return;borrar('productos',{producto_id:id}).catch(err=>toast('Error'));}
+$('#btnProdCancel').addEventListener('click',()=>{editId=null;resetForm();});
+
+/* categorias */
+function guardarCat(e){e.preventDefault();
+  const d={categoria_nombre:$('#cNombre').value,categoria_slug:$('#cSlug').value||slug($('#cNombre').value),imagen_url:$('#cImagen').value};
+  guardar('categorias',d,editCat,'categoria_id').catch(()=>{});
+  $('#formCat').reset();editCat=null;toast('Categoría guardada ✔');render();}
+let editCat=null;$('#formCat').addEventListener('submit',guardarCat);
+function editarCat(id){const c=cats.find(x=>x.categoria_id===id);if(!c)return;editCat=id;$('#cNombre').value=c.categoria_nombre;$('#cSlug').value=c.categoria_slug;$('#cImagen').value=c.imagen_url;$('#btnCatSub').textContent='Guardar';$('#btnCatCancel').classList.remove('hidden')}
+function borrarCat(id){if(!confirm('¿Borrar categoría?'))return;const c=cats.find(x=>x.categoria_id===id);if(subs.some(s=>s.categoria_slug===c?.categoria_slug)){toast('Borra sus subcategorías primero');return}borrar('categorias',{categoria_id:id});}
+$('#btnCatCancel').addEventListener('click',()=>{editCat=null;$('#formCat').reset();$('#btnCatSub').textContent='Agregar Categoría';$('#btnCatCancel').classList.add('hidden')});
+
+/* subcategorías */
+function guardarSub(e){e.preventDefault();
+  const d={categoria_slug:$('#sCat').value,subcat_nombre:$('#sNombre').value,subcat_slug:$('#sSlug').value||slug($('#sNombre').value),imagen_url:''};
+  guardar('subcategorias',d,editSub,'subcat_id').catch(()=>{});
+  $('#formSub').reset();editSub=null;toast('Subcategoría guardada ✔');render();}
+let editSub=null;$('#formSub').addEventListener('submit',guardarSub);
+function editarSub(id){const s=subs.find(x=>x.subcat_id===id);if(!s)return;editSub=id;$('#sNombre').value=s.subcat_nombre;$('#sSlug').value=s.subcat_slug;$('#sCat').value=s.categoria_slug;$('#btnSubSub').textContent='Guardar';$('#btnSubCancel').classList.remove('hidden')}
+function borrarSub(id){if(!confirm('¿Borrar subcategoría?'))return;const s=subs.find(x=>x.subcat_id===id);if(prods.some(p=>p.subcat_slug===s?.subcat_slug)){toast('Borra sus productos primero');return}borrar('subcategorias',{subcat_id:id});}
+$('#btnSubCancel').addEventListener('click',()=>{editSub=null;$('#formSub').reset();$('#btnSubSub').textContent='Agregar Subcategoría';$('#btnSubCancel').classList.add('hidden')});
+
+/* helpers */
+function resetForm(){$('#formProducto').reset();$('#btnProdSubmit').textContent='Agregar Producto';$('#btnProdCancel').classList.add('hidden')}
+
+/* nube: guardar / borrar */
+async function guardar(k,o,editId,pk){
+  try{
+    if(editId!=null){
+      await api(k,'?'+pk+'=eq.'+editId,'PATCH',o);
+    }else{
+      await api(k,'','POST',o);
+    }
+    await cargar();render();
+    return true;
+  }catch(e){toast('Error al guardar: '+e.message);return false;}
+}
+async function borrar(k,filter){
+  try{
+    const key=Object.keys(filter)[0];const val=filter[key];
+    await api(k,'?'+key+'=eq.'+val,'DELETE');
+    await cargar();render();toast('Eliminado 🗑️');
+  }catch(e){toast('Error al borrar: '+e.message);}
+}
+
+/* backup */
+$('#btnExport').addEventListener('click',()=>{const b=new Blob([JSON.stringify({categorias:cats,subcategorias:subs,productos:prods},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='catalogo_respaldo.json';a.click();toast('Exportado 📦')});
+$('#btnImport').addEventListener('click',()=>$('#fileImport').click());
+$('#fileImport').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{
+  let o;
+  try{o=JSON.parse(ev.target.result);}catch(jerr){bigErr('El archivo NO es un JSON válido. Revisa que descargaste productos_amazon_com.json y no lo modificaste.');return;}
+  try{
+    let nCat=0,nSub=0,nProd=0;
+    if(Array.isArray(o.categorias)&&o.categorias.length){for(const c of o.categorias){c.categoria_id=Number(c.categoria_id);await apiUpsert('categorias',c);}nCat=o.categorias.length;}
+    if(Array.isArray(o.subcategorias)&&o.subcategorias.length){for(const s of o.subcategorias){s.subcat_id=Number(s.subcat_id);await apiUpsert('subcategorias',s);}nSub=o.subcategorias.length;}
+    if(Array.isArray(o.productos)&&o.productos.length){for(const p of o.productos){p.producto_id=Number(p.producto_id);
+      if(p.subcat_slug&&!subs.some(x=>x.subcat_slug===p.subcat_slug)){
+        await apiUpsert('subcategorias',{subcat_id:9000+Math.floor(Math.random()*900),categoria_slug:p.categoria_slug||p.subcat_slug,subcat_nombre:p.subcat_nombre||p.subcat_slug,subcat_slug:p.subcat_slug,imagen_url:p.subcat_imagen||''});
+        nSub++;}
+      await apiUpsert('productos',p);}nProd=o.productos.length;}
+    await cargar();render();
+    bigMsg('Importado OK ✔ '+nProd+' productos, '+nSub+' subcategorias. Refresca la tienda.');
+  }catch(err){bigErr('Error al importar: '+(err&&err.message||'desconocido')+'. Si dice duplicate/conflict, ya estaban esos productos.');}};r.readAsText(f)});
+function bigErr(m){showErr(m);alert('⚠ Error: '+m);}
+function bigMsg(m){var e=document.getElementById('sbError');if(e){e.textContent=m;e.style.display='block';e.style.background='#eaffef';e.style.color='#1a7f37';e.style.borderBottom='1px solid #b8e6c6';}}
+function apiUpsert(table,row){
+  const url=SUPABASE_URL+'/rest/v1/'+table;
+  return fetch(url,{method:'POST',headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,'Content-Type':'application/json','Prefer':'return=representation,resolution=merge-duplicates'},body:JSON.stringify(row)})
+    .then(async r=>{const j=await r.json().catch(()=>null);if(!r.ok){throw new Error((j&&j.message)||('HTTP '+r.status));}return j;})
+    .catch(e=>{if(e instanceof TypeError){throw new Error('No hay conexion con Supabase');}throw e;});
+}
+$('#btnReset').addEventListener('click',()=>{if(!confirm('¿Restaurar datos de ejemplo?'))return;alert('Los datos de ejemplo ya estan creados en la nube. Para restablecer, vuelve a ejecutar el script SQL o borra las filas en la tabla.');});
+
+/* init */
+switchTab('productos');fillSubcats();fillCatParent();
+</script>
+</body>
+</html>
